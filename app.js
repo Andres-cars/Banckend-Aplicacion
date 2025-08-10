@@ -6,6 +6,7 @@ import rotuerTypeUsers from './router/typeUserRouter.js';
 import  { RouterUsuer } from './router/userRouter.js';
 import  personrouter  from './router/PersonRouter.js';
 import { sequelize } from "./db/conexion.js";
+import tutoriRouter  from './router/tutoriRouter.js';
 
 // imaganes
 //import path from 'path';
@@ -13,6 +14,7 @@ import { sequelize } from "./db/conexion.js";
 
 const _PORT = PORT || 3000;
 const app = express();
+
 
 // imaganes
 //const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +29,9 @@ app.use(cors());
 app.use('/api', rotuerTypeUsers);
 app.use('/api', RouterUsuer);
 app.use('/api', personrouter);
+app.use('/api', tutoriRouter);
+
+
 
 const main = async () => {
     try {
