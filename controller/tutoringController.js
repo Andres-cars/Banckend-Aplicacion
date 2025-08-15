@@ -2,7 +2,7 @@ import { tutoringModel } from "../model/tutoringModel.js";
 import { userModel } from "../model/userModel.js";
 import { typeUserModel } from "../model/typeUserModel.js";
 import { Op } from "sequelize";
-
+import { sendEmail } from "../services/emailService.js";
 // Constantes para IDs de roles, ajustar si alguno de estos datos cambian en la DB
 //como yo tenia datos y elimine en el typeUser tengo como estudiante 3 y profesor 2
 //tu si no haces pruebas es posible que tengas 1 y 2 asi que modifica aqui segun corresponda a tu DB
@@ -14,22 +14,26 @@ export const createTutoring = async (req, res) => {
   try {
     const { student_id, teacher_id, topic, description, date } = req.body;
 
-    // Verificar estudiante y rol
+    // Verificar estudiante
     const student = await userModel.findOne({
       where: { id: student_id },
       include: [{ model: typeUserModel, attributes: ["id", "type"] }],
     });
-    if (!student || student.typeusers_id.id == STUDENT_ROLE_ID) {
-      return res.status(400).json({ msg: "Usuario estudiante inválido o no tiene rol estudiante." });
+    if (!student || student.typeuser.id !== STUDENT_ROLE_ID) {
+      return res.status(400).json({
+        msg: "Usuario estudiante inválido o no tiene rol estudiante.",
+      });
     }
 
-    // Verificar profesor y rol
+    // Verificar profesor
     const teacher = await userModel.findOne({
       where: { id: teacher_id },
       include: [{ model: typeUserModel, attributes: ["id", "type"] }],
     });
-    if (!teacher || teacher.typeusers_id.id == TEACHER_ROLE_ID) {
-      return res.status(400).json({ msg: "Usuario profesor inválido o no tiene rol profesor." });
+    if (!teacher || teacher.typeuser.id !== TEACHER_ROLE_ID) {
+      return res.status(400).json({
+        msg: "Usuario profesor inválido o no tiene rol profesor.",
+      });
     }
 
     // Crear la tutoría
@@ -42,9 +46,22 @@ export const createTutoring = async (req, res) => {
       status: "pendiente",
     });
 
-    res.status(201).json({ message: "Tutoría creada con éxito", tutoring });
+    // Enviar correo al estudiante
+    await sendEmail({
+      to: student.email, // Usa el correo real del estudiante
+      subject: "Nueva tutoría asignada",
+      text: `Hola ${student.user}, tu tutoría ha sido creada para el día ${date}.`,
+    });
+
+    // Responder UNA sola vez
+    return res.status(201).json({
+      message: "Tutoría creada y notificación enviada",
+      tutoring,
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error creando tutoría:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
 

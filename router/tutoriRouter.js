@@ -10,4 +10,6 @@ rotuer.patch("/:id", updateTutoring); // actualizar tutoría
 rotuer.delete("/:id", deleteTutoring); // eliminar tutoría
 rotuer.get("/report/:student_id", getWeeklyReport); // reporte semanal filtrado por estudiante
 
+
+
 export default rotuer;
